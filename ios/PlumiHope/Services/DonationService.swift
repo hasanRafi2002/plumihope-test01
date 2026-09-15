@@ -72,6 +72,14 @@ struct PaymentInitiateResponse: Codable {
     }
 }
 
+private struct WebhookRequest: Encodable {
+    let providerReference: String
+
+    enum CodingKeys: String, CodingKey {
+        case providerReference = "provider_reference"
+    }
+}
+
 final class DonationService {
     static let shared = DonationService()
     private let client = APIClient.shared
@@ -98,5 +106,15 @@ final class DonationService {
     func listMyDonations() async throws -> [Donation] {
         let endpoint = APIEndpoint(path: "/donations/me", method: .get, requiresAuth: true)
         return try await client.request(endpoint)
+    }
+
+    /// DEV/SANDBOX ONLY: there is no real payment gateway calling back to our
+    /// webhook in local development, so the client simulates that server-to-server
+    /// callback itself after "completing" a sandbox payment. This must never be
+    /// called against a real provider — real providers call the webhook themselves.
+    func simulateSandboxWebhook(providerReference: String) async throws {
+        let body = WebhookRequest(providerReference: providerReference)
+        let endpoint = APIEndpoint(path: "/payments/webhooks/sandbox", method: .post, requiresAuth: false)
+        try await client.requestNoContent(endpoint, body: body)
     }
 }

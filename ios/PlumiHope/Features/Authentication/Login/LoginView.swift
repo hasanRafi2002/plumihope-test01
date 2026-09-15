@@ -2,6 +2,7 @@ import SwiftUI
 
 struct LoginView: View {
     @StateObject private var viewModel = LoginViewModel()
+    @ObservedObject private var authManager = AuthManager.shared
     @State private var showRegister = false
 
     var body: some View {
@@ -11,6 +12,13 @@ struct LoginView: View {
                     .font(.title)
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity, alignment: .leading)
+
+                if let sessionExpiredMessage = authManager.sessionExpiredMessage {
+                    Text(sessionExpiredMessage)
+                        .font(.footnote)
+                        .foregroundColor(.orange)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
 
                 VStack(spacing: 16) {
                     TextField("Email or phone", text: $viewModel.email)
